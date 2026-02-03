@@ -9,36 +9,93 @@ app = Flask(__name__)
 
 @app.route('/api/generar')
 def generar():
+    # 1. Obtener el CURP de la URL
     curp = request.args.get('curp', '').upper()
-    if len(curp) != 18: return "CURP inválido", 400
-    
-    # [span_1](start_span)Datos basados en tu documento[span_1](end_span)
-    # Generamos un RFC y idCIF consistente usando el CURP
-    rfc = curp[:10] + hashlib.md5(curp.encode()).hexdigest()[:3].upper()
-    idcif = str(int(hashlib.sha256(rfc.encode()).hexdigest(), 16))[:11]
-    
-    pdf = FPDF()
+    if len(curp) != 18:
+        return "CURP inválido. Debe tener 18 caracteres.", 400
+
+    # 2. Cálculos automáticos (RFC e idCIF simulado)
+    # El RFC son los primeros 10 del CURP + homoclave (usamos K20 para Miguel)
+    rfc = curp[:10] + "K20" 
+    idcif = "16080297174"
+
+    # 3. Configuración del PDF
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     
-    # [span_2](start_span)Cargar la imagen de fondo (la que subiste)[span_2](end_span)
+    # Ruta de la plantilla
     base_dir = os.path.dirname(__file__)
     img_path = os.path.join(base_dir, "..", "assets", "plantilla.png")
-    pdf.image(img_path, x=0, y=0, w=210, h=297)
     
-    # [span_3](start_span)Escribir RFC en la Cédula (pág 1)[span_3](end_span)
-    pdf.set_font("Helvetica", size=10)
-    pdf.set_xy(53, 42) 
-    pdf.cell(0, 10, rfc)
+    # Dibujar fondo
+    if os.path.exists(img_path):
+        pdf.image(img_path, x=0, y=0, w=210, h=297)
+    else:
+        return f"Error: No se encontró plantilla.png en assets/", 500
+
+    # 4. Generar QR de Validación
+    qr_data = f"https://generador-fiscal.vercel.app/?rfc={rfc}"
+    qr = qrcode.make(qr_data)
+    qr_io = io.BytesIO()
+    qr.save(qr_io, 'PNG')
+    qr_io.seek(0)
     
-    # [span_4](start_span)Escribir RFC y CURP en la tabla de datos[span_4](end_span)
-    pdf.set_xy(40, 105) 
-    pdf.cell(0, 10, rfc)
-    pdf.set_xy(40, 115) 
-    pdf.cell(0, 10, curp)
+    # Insertar QR en el recuadro superior izquierdo
+    pdf.image(qr_io, x=65, y=82, w=25) # Ajustado según la Cédula
+
+    # 5. Estampar Datos (Coordenadas ajustadas a tu imagen)
+    pdf.set_font("Helvetica", style='B', size=9)
     
+    # Datos de la Cédula (Cuadro pequeño arriba)
+    pdf.set_xy(65, 103)
+    pdf.cell(0, 0, rfc)
+    
+    # Datos de Identificación (Tabla principal)
+    pdf.set_font("Helvetica", size=8)
+    
+    pdf.set_xy(36, 115) # RFC
+    pdf.cell(0, 0, rfc)
+    
+    pdf.set_xy(36, 125) # CURP
+    pdf.cell(0, 0, curp)
+    
+    pdf.set_xy(36, 135) # Nombre
+    pdf.cell(0, 0, "MIGUEL ANGEL")
+    
+    pdf.set_xy(36, 145) # Apellido 1
+    pdf.cell(0, 0, "ESCOBEDO")
+    
+    pdf.set_xy(36, 155) # Apellido 2
+    pdf.cell(0, 0, "FAVELA")
+    
+    pdf.set_xy(36, 165) # Fecha Inicio
+    pdf.cell(0, 0, "15/08/2016")
+    
+    pdf.set_xy(36, 175) # Estatus
+    pdf.set_text_color(0, 100, 0) # Verde para "ACTIVO"
+    pdf.cell(0, 0, "ACTIVO")
+    pdf.set_text_color(0, 0, 0)
+
+    # 6. Datos de Domicilio (Ejemplo basado en su zona)
+    pdf.set_xy(36, 215) # CP
+    pdf.cell(0, 0, "32590")
+    
+    pdf.set_xy(110, 245) # Entidad
+    pdf.cell(0, 0, "CHIHUAHUA")
+
+    # 7. Retornar el PDF al navegador
     buf = io.BytesIO()
-    pdf_text = pdf.output()
-    buf.write(pdf_text)
+    pdf_output = pdf.output(dest='S')
+    buf.write(pdf_output)
     buf.seek(0)
-    return send_file(buf, mimetype='application/pdf')
-  
+    
+    return send_file(
+        buf, 
+        mimetype='application/pdf', 
+        as_attachment=False, 
+        download_name=f"Constancia_{rfc}.pdf"
+    )
+
+if __name__ == '__main__':
+    app.run(debug=True)
+    
