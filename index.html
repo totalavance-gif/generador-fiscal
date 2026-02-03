@@ -1,21 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Validación SAT</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador CSF - SAT</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
-        .box { border: 1px solid #ccc; padding: 20px; display: inline-block; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
+        .logo { width: 150px; margin-bottom: 20px; }
+        h2 { color: #1d1d1b; margin-bottom: 10px; font-size: 1.5rem; }
+        p { color: #666; font-size: 0.9rem; margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; text-transform: uppercase; }
+        button { width: 100%; padding: 12px; background-color: #bc955c; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: background 0.3s; }
+        button:hover { background-color: #98774a; }
+        .footer { margin-top: 20px; font-size: 0.7rem; color: #999; }
     </style>
 </head>
 <body>
-    <h1>VALIDACIÓN DE INFORMACIÓN FISCAL</h1>
-    <div class="box">
-        <p><strong>RFC:</strong> <span id="rfc"></span></p>
-        <p><strong>Estatus:</strong> ACTIVO</p>
+    <div class="container">
+        <img src="https://www.gob.mx/cms/uploads/action_program/main_image/26942/post_SAT.jpg" alt="Logo SAT" class="logo">
+        <h2>Generar Constancia</h2>
+        <p>Ingresa tu CURP de 18 caracteres para obtener tu Constancia de Situación Fiscal actualizada.</p>
+        
+        <input type="text" id="curpInput" placeholder="ABC123456HDFR..." maxlength="18">
+        <button onclick="descargarPDF()">Generar PDF</button>
+
+        <div class="footer">
+            Este es un sistema de generación automatizada para el contribuyente.
+        </div>
     </div>
+
     <script>
-        const params = new URLSearchParams(window.location.search);
-        document.getElementById('rfc').innerText = params.get('rfc');
+        function descargarPDF() {
+            const curp = document.getElementById('curpInput').value.trim().toUpperCase();
+            if (curp.length !== 18) {
+                alert("Por favor, ingresa un CURP válido de 18 caracteres.");
+                return;
+            }
+            // Redirige a tu API en Vercel
+            window.location.href = `/api/generar?curp=${curp}`;
+        }
     </script>
 </body>
 </html>
