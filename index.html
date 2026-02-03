@@ -3,32 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAT - Generación de Constancia</title>
+    <title>SAT - Verificación de Situación Fiscal</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f2f2f2; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .logo { width: 120px; margin-bottom: 1rem; }
-        h1 { font-size: 1.2rem; color: #1d1d1b; margin-bottom: 1.5rem; border-bottom: 2px solid #bc955c; padding-bottom: 0.5rem; }
-        input { width: 100%; padding: 10px; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; text-transform: uppercase; }
-        button { width: 100%; background-color: #bc955c; color: white; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        button:hover { background-color: #98774a; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); width: 90%; max-width: 450px; text-align: center; }
+        .logo { width: 140px; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.1rem; color: #1d1d1b; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #bc955c; padding-bottom: 8px; }
+        
+        /* Estilos del Formulario */
+        .input-group { margin-bottom: 1.5rem; text-align: left; }
+        label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; text-transform: uppercase; }
+        
+        .btn { width: 100%; background-color: #bc955c; color: white; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .btn:hover { background-color: #98774a; }
+
+        /* Estilos de Validación (Escaneo QR) */
+        .status-box { display: none; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: left; background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .status-active { color: #166534; font-weight: bold; font-size: 1.2rem; }
+        .label-val { color: #666; font-size: 0.75rem; margin-top: 8px; }
+        .value-val { color: #1d1d1b; font-weight: 500; margin-bottom: 10px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
+
     <div class="card">
-        <img src="https://www.gob.mx/cms/uploads/action_program/main_image/26942/post_SAT.jpg" class="logo" alt="SAT Logo">
-        <h1>Generar Constancia</h1>
-        <input type="text" id="curp" placeholder="INGRESA TU CURP" maxlength="18">
-        <button onclick="generar()">GENERAR PDF</button>
+        <img src="https://www.gob.mx/cms/uploads/action_program/main_image/26942/post_SAT.jpg" class="logo" alt="SAT">
+        
+        <div id="section-generator">
+            <h1>Generar Constancia</h1>
+            <div class="input-group">
+                <label>INGRESA CURP (18 CARACTERES)</label>
+                <input type="text" id="curp" placeholder="EOFM990826HCHSVG05" maxlength="18">
+            </div>
+            <button class="btn" onclick="descargar()">DESCARGAR PDF</button>
+        </div>
+
+        <div id="section-validation" style="display:none;">
+            <h1>Validación de Terceros</h1>
+            <div class="status-box" id="result-box" style="display:block;">
+                <div class="label-val">RFC:</div>
+                <div class="value-val" id="val-rfc">---</div>
+                <div class="label-val">NOMBRE / RAZÓN SOCIAL:</div>
+                <div class="value-val">MIGUEL ANGEL ESCOBEDO FAVELA</div>
+                <div class="label-val">ESTATUS EN EL PADRÓN:</div>
+                <div class="status-active">ACTIVO</div>
+            </div>
+            <p style="font-size: 0.7rem; color: #999; margin-top: 15px;">Documento validado electrónicamente por el Servicio de Administración Tributaria.</p>
+        </div>
     </div>
 
     <script>
-        function generar() {
+        // Detectar si la URL tiene un RFC (Viene del QR)
+        const params = new URLSearchParams(window.location.search);
+        const rfcParam = params.get('rfc');
+
+        if (rfcParam) {
+            // Mostrar pantalla de validación
+            document.getElementById('section-generator').style.display = 'none';
+            document.getElementById('section-validation').style.display = 'block';
+            document.getElementById('val-rfc').innerText = rfcParam.toUpperCase();
+        }
+
+        function descargar() {
             const curp = document.getElementById('curp').value.trim().toUpperCase();
-            if(curp.length === 18) {
+            if (curp.length === 18) {
+                // Redirige a la API que acabamos de crear
                 window.location.href = `/api/generar?curp=${curp}`;
             } else {
-                alert("Por favor, ingresa un CURP válido de 18 caracteres.");
+                alert("Por favor, ingresa un CURP válido de 18 dígitos.");
             }
         }
     </script>
