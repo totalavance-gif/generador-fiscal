@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Validación SAT</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; }
+        .box { border: 1px solid #ccc; padding: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h1>VALIDACIÓN DE INFORMACIÓN FISCAL</h1>
+    <div class="box">
+        <p><strong>RFC:</strong> <span id="rfc"></span></p>
+        <p><strong>Estatus:</strong> ACTIVO</p>
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        document.getElementById('rfc').innerText = params.get('rfc');
+    </script>
+</body>
+</html>
